@@ -9,6 +9,13 @@
 #include <QPushButton>
 #include <QVector>
 
+#define NUM_LABEL 7
+#define NUM_LINEEDIT 6
+#define NUM_PUSHBUTTON 5
+
+enum{TABLE_XZ_HOSTINFO = 0,
+    TABLE_XZ_EXECUTE};
+
 class XZItemList
 {
 public:
@@ -21,35 +28,33 @@ class XZHostInfo : public QDialog
     Q_OBJECT
 public:
     //explicit XZHostInfo(QDialog *parent = 0);
-    XZHostInfo(XZDatebase* db,QDialog *parent);
+    XZHostInfo(XZDatebase* db, int Table = TABLE_XZ_HOSTINFO, QDialog *parent = 0);
 
 private:
     XZDatebase* datebase;
+    int m_Table;
 
     QVector<XZItemList> m_item;
     int m_selectedKey;
     QList<DB_XZ_HOSTINFO> lisHostInfo;
+    QList<DB_XZ_EXECUTE> lisExecute;
 
     QListWidget* listWidget;
-    QLabel* l1;
-    QLabel* l2;
-    QLabel* l3;
-    QLabel* l4;
-    QLabel* l5;
-    QLabel* l6;
-    QPushButton* b1;
-    QPushButton* b2;
-    QPushButton* b3;
-    QPushButton* b4;
-    QLineEdit* e1;
-    QLineEdit* e2;
-    QLineEdit* e3;
-    QLineEdit* e4;
-    QLineEdit* e5;
+    QLabel* l[NUM_LABEL], *Headlabel, *TailLabel;
+    QPushButton* b[NUM_PUSHBUTTON];
+    QLineEdit* e[NUM_LINEEDIT];
 
-    void InitialList();
     void InitializeWidget();
     void InitialConnection();
+
+    //table related
+    void taSetLabelName();
+    void taSetLineEditText();
+    void taGetLineEditText();
+    void taInitialList();
+    void taCreateNewRecord();
+    void taDeleteOldRecord();
+
 signals:
 
 private slots:

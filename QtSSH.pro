@@ -24,3 +24,5 @@ HEADERS  += mainwindow.h \
     xzhostinfo.h
 
 FORMS    += mainwindow.ui
+
+RESOURCES +=

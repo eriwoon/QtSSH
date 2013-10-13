@@ -22,6 +22,7 @@ private:
 private slots:
     void hostInfo();
     void aboutInfo();
+    void executable();
 };
 
 #endif // MAINWINDOW_H
