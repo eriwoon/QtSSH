@@ -2,7 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTextEdit>
 #include "xzdatebase.h"
+#include "xzseqdock.h"
+#include <QLabel>
 namespace Ui {
 class MainWindow;
 }
@@ -17,12 +20,20 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    XZDatebase* datebase;
-
+    XZDatebase* db;
+    XZSeqDock* dock;
+    QTextEdit* textEdit;
+    void initialTextEdit();
+    QLabel* status;
 private slots:
     void hostInfo();
     void aboutInfo();
     void executable();
+    void sequence();
+    void setoutput(QString);
+    void clearOutput();
+    void setStatusBarTip(QString);
 };
+
 
 #endif // MAINWINDOW_H

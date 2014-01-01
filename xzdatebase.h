@@ -22,9 +22,31 @@ class DB_XZ_EXECUTE
 {
 public:
     int Key;
-    QString Directory;
+    int Host;
     int Type;
     QString Command;
+    QString Name;
+    QString Desc;
+};
+class DB_XZ_CONFIGURE
+{
+public:
+    int Key;
+    QString AttributeName;
+    QString AttributeValue;
+};
+
+//the number of the executes of the sequence
+#define SEQUENCE_NUM 10
+
+//the data structure of sequence
+class DB_XZ_SEQUENCE
+{
+public:
+    int Key;
+    int Profile;
+    int Recid;
+    int Exe[SEQUENCE_NUM];
     QString Name;
     QString Desc;
 };
@@ -33,7 +55,7 @@ class XZDatebase : public QObject
 {
     Q_OBJECT
 public:
-    explicit XZDatebase(QObject *parent = 0);
+    explicit XZDatebase(void* mwindow, QObject *parent = 0);
 
 public:
     bool openDB();
@@ -52,14 +74,24 @@ public:
     bool getDB_XZ_EXECUTE(QList<DB_XZ_EXECUTE>&);
     bool modifyDB_XZ_EXECUTE(int, DB_XZ_EXECUTE);
 
+    //XZ_Sequence
+    bool insertDB_XZ_SEQUENCE(DB_XZ_SEQUENCE);
+    bool deleteDB_XZ_SEQUENCE(int);
+    bool getDB_XZ_SEQUENCE(QList<DB_XZ_SEQUENCE>&);
+    bool modifyDB_XZ_SEQUENCE(int, DB_XZ_SEQUENCE);
+
+    //XZ_CONFIGURE
+    bool insertDB_XZ_CONFIGURE(DB_XZ_CONFIGURE);
+    bool deleteDB_XZ_CONFIGURE(int);
+    bool getDB_XZ_CONFIGURE(QList<DB_XZ_CONFIGURE>&);
+    bool modifyDB_XZ_CONFIGURE(int, DB_XZ_CONFIGURE);
+
 private:
     QSqlDatabase db;
     QString m_sDBName;
 
 private:
     bool initializeDB();
-
-signals:
 
 public slots:
 

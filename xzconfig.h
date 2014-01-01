@@ -3,25 +3,28 @@
 
 #include <QString>
 #include <QDebug>
+#include <QObject>
+
+#define XZOUTPUT connect(&xzconfig,SIGNAL(output(QString)),(MainWindow*)mwindow,SLOT(setoutput(QString)));
 
 enum{LOG_INFO = 0,
     LOG_WARNING,
     LOG_ERROR,
-    LOG_NO};
+    LOG_OUTPUT};
 
-class XZConfig
+class XZConfig : public QObject
 {
+    Q_OBJECT
+
 public:
     XZConfig();
-
+    void Log(int,QString);
 private:
     int m_iLogLevel;
-
-private:
     QString GetLogDesc(int);
 
-public:
-    void Log(int,QString);
+signals:
+    void output(QString);
 };
 
 static XZConfig xzconfig;

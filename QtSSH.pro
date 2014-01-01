@@ -4,7 +4,10 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql
+QT       += core gui sql network
+
+#INCLUDEPATH += "/usr/local/include"
+LIBS += -lssh2
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -13,16 +16,27 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
+    mainwindow.cpp \
     xzconfig.cpp \
     xzdatebase.cpp \
-    xzhostinfo.cpp
+    xzhostinfo.cpp \
+    ssh2.cpp \
+    xzseqdock.cpp \
+    xzprocessexecute.cpp \
+    xzssh.cpp
 
 HEADERS  += mainwindow.h \
     xzconfig.h \
     xzdatebase.h \
-    xzhostinfo.h
+    xzhostinfo.h \
+    ssh2.h \
+    xzseqdock.h \
+    xzprocessexecute.h \
+    xzssh.h
 
 FORMS    += mainwindow.ui
 
 RESOURCES +=
+
+OTHER_FILES += \
+    design.txt
