@@ -1,6 +1,9 @@
 #ifndef XZCONFIG_H
 #define XZCONFIG_H
 
+#define TEST
+#define LOG_LEVEL LOG_INFO
+
 #include <QString>
 #include <QDebug>
 #include <QObject>

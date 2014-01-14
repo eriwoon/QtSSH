@@ -2,7 +2,7 @@
 #define XZPROCESSEXECUTE_H
 #include <xzdatebase.h>
 #include <QList>
-#include "ssh2.h"
+#include "xzssh.h"
 #include <QThread>
 
 class XZProcessExecute : public QThread
@@ -17,7 +17,7 @@ public:
     void process(QList<DB_XZ_EXECUTE>*, QList<DB_XZ_HOSTINFO>*);
 
 private:
-    ssh2_t* cssh;
+    XZSSh* cssh;
     QList<DB_XZ_EXECUTE>* lisExecute;
     QList<DB_XZ_HOSTINFO>* lisHostInfo;
 

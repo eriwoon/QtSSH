@@ -8,7 +8,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QVector>
-#include "ssh2.h"
+#include "xzssh.h"
 #include <QFormLayout>
 #include <QVector>
 #include <QComboBox>

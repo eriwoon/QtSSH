@@ -20,7 +20,6 @@ SOURCES += main.cpp\
     xzconfig.cpp \
     xzdatebase.cpp \
     xzhostinfo.cpp \
-    ssh2.cpp \
     xzseqdock.cpp \
     xzprocessexecute.cpp \
     xzssh.cpp
@@ -29,7 +28,6 @@ HEADERS  += mainwindow.h \
     xzconfig.h \
     xzdatebase.h \
     xzhostinfo.h \
-    ssh2.h \
     xzseqdock.h \
     xzprocessexecute.h \
     xzssh.h

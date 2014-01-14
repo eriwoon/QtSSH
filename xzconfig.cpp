@@ -4,7 +4,7 @@
 
 XZConfig::XZConfig()
 {
-    this->m_iLogLevel = LOG_WARNING;
+    this->m_iLogLevel = LOG_LEVEL;
 }
 
 QString XZConfig::GetLogDesc(int iLogLevel)

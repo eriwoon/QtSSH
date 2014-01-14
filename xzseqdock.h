@@ -32,6 +32,7 @@ private:
     QPushButton* stop;
     QPushButton* refresh;
     QPushButton* clear;
+    QPushButton* test;
 
     QList<DB_XZ_HOSTINFO> lisHostInfo;
     QList<DB_XZ_EXECUTE> lisExecute;
@@ -47,6 +48,7 @@ private slots:
     void onChooseSequence(QListWidgetItem * , QListWidgetItem *);
     void onClickStart();
     void onChangeCurrentExecuteNo(int);
+    void onClickTest();
 };
 
 #endif // XZSEQDOCK_H

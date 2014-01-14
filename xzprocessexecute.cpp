@@ -13,7 +13,7 @@ XZProcessExecute::XZProcessExecute(void *mwindow)
     XZOUTPUT
     stop_flag = 0;
     xzconfig.Log(LOG_INFO,"Create instance of XZProcessExecute");
-    cssh = new ssh2_t();
+    cssh = new XZSSh();
     this->lisExecute = 0;
     this->lisHostInfo = 0;
     connect(this,SIGNAL(ChangeStatus(QString)),(MainWindow*)mwindow,SLOT(setStatusBarTip(QString)));
@@ -36,7 +36,7 @@ void XZProcessExecute::process(QList<DB_XZ_EXECUTE>* lisExecute,QList<DB_XZ_HOST
 
 XZProcessExecute::~XZProcessExecute()
 {
-    cssh->disconnect();
+    cssh->xzssh_disconnect();
 }
 
 void XZProcessExecute::run()
@@ -73,7 +73,7 @@ void XZProcessExecute::run()
             //xzconfig.Log(LOG_INFO, QString("iter->key = ") + QString::number(iter->Key) + "; cur->Key = " + QString::number(cur->Key));
             if (iter->Key == cur->Host)
             {
-                if(cssh->connect(iter->IP.toStdString(),22,iter->User.toStdString(),iter->Passwd.toStdString()))
+                if(cssh->xzssh_connect(iter->IP,22,iter->User,iter->Passwd))
                 {
                     xzconfig.Log(LOG_ERROR,QString(tr("Cannot connect to the server:")) + iter->IP);
                     return;
@@ -82,13 +82,11 @@ void XZProcessExecute::run()
                 if(cur->Type == 1)
                 {
                     QFileInfo fi(cur->Command);
-                    if(cssh->recvfile((QString("recv/") + fi.fileName()).toStdString(),
-                            cur->Command.toStdString()))
+                    if(cssh->xzssh_sftpGet(cur->Command,(QString("recv/") + fi.fileName())))
                     {
                         xzconfig.Log(LOG_ERROR,QString(tr("Cannot get the file:"))
                                      + cur->Command
-                                     + tr(", ErrCode: ") + QString::number(cssh->last_errno())
-                                     + tr(", ErrDesc: ") + cssh->last_error());
+                                     + tr(", ErrDesc: ") + cssh->xzssh_getErrMsg());
                         emit this->ChangeStatus(QString("ready"));
                         emit this->CurrentExecuteNo(0);
                         return;
@@ -97,12 +95,11 @@ void XZProcessExecute::run()
                 }
                 else if(cur->Type == 0)
                 {
-                    if(cssh->exec(cur->Command.toStdString()))
+                    if(cssh->xzssh_exec(cur->Command,NULL))
                     {
                         xzconfig.Log(LOG_ERROR,QString(tr("Cannot execute the command:"))
                                      + cur->Command
-                                     + tr(", ErrCode: ") + QString::number(cssh->last_errno())
-                                     + tr(", ErrDesc: ") + cssh->last_error());
+                                     + tr(", ErrDesc: ") + cssh->xzssh_getErrMsg());
                         emit this->ChangeStatus(QString("ready"));
                         emit this->CurrentExecuteNo(0);
                         return;

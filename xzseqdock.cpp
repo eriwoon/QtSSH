@@ -1,10 +1,12 @@
 #include "xzseqdock.h"
 #include "mainwindow.h"
 #include "xzconfig.h"
+#include "xzssh.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QLabel>
+#include <QDebug>
 
 XZSeqDock::XZSeqDock(const QString & title, void *mwindow,XZDatebase* database)
     :QDockWidget(title),db(database)
@@ -41,9 +43,16 @@ void XZSeqDock::InitializeWidget(void *mwindow)
     connect(refresh,SIGNAL(clicked()),this,SLOT(setItems()));
     clear   = new QPushButton("clear");
     connect(clear,SIGNAL(clicked()),(MainWindow*)mwindow,SLOT(clearOutput()));
+    test    = new QPushButton("test");
+#ifndef TEST
+    test->hide();
+#endif
+    connect(test,SIGNAL(clicked()),this,SLOT(onClickTest()));
+
     l2->addWidget(stop);
     l2->addWidget(refresh);
     l2->addWidget(clear);
+    l2->addWidget(test);
 
     QVBoxLayout* mainLayout = new QVBoxLayout();
     mainLayout->addLayout(h1);
@@ -170,4 +179,58 @@ void XZSeqDock::onChangeCurrentExecuteNo(int number)
             }
         }
     }
+}
+
+void XZSeqDock::onClickTest()
+{
+    xzconfig.Log(LOG_INFO, "Clicked Test");
+    XZSSh xzssh;
+
+    int re = 0;
+
+    xzconfig.Log(LOG_INFO, "xzssh.xzssh_connect(\"127.0.0.1\",22,\"eric\",\"xiaozhen\");");
+    re = xzssh.xzssh_connect("127.0.0.1",22,"eric","xiaozhen");
+    xzconfig.Log(LOG_INFO, "re = " + QString::number(re));
+    if(re != 0)
+    {
+        xzconfig.Log(LOG_ERROR, xzssh.xzssh_getErrMsg());
+    }
+
+    /*xzconfig.Log(LOG_INFO, "xzssh.xzssh_connect(\"146.185.182.192\",22,\"xiaozhen\",\"abcd\");");
+    re = xzssh.xzssh_connect("146.185.182.192",22,"xiaozhen","abcd");
+    xzconfig.Log(LOG_INFO, "re = " + QString::number(re));
+    if(re != 0)
+    {
+        xzconfig.Log(LOG_ERROR, xzssh.xzssh_getErrMsg());
+    }*/
+
+    xzconfig.Log(LOG_INFO, "xzssh.xzssh_connect(\"146.185.182.192\",22,\"xiaozhen\",\"Zxc12Axxici\");");
+    re = xzssh.xzssh_connect("146.185.182.192",22,"xiaozhen","Zxc12Axxici");
+    xzconfig.Log(LOG_INFO, "re = " + QString::number(re));
+    if(re != 0)
+    {
+        xzconfig.Log(LOG_ERROR, xzssh.xzssh_getErrMsg());
+    }
+
+    QString result;
+    xzconfig.Log(LOG_INFO, "xzssh.xzssh_exec(\"date | tee 1.unl\",result);");
+    re = xzssh.xzssh_exec("date | tee 1.unl",&result);
+    xzconfig.Log(LOG_INFO, "re = " + QString::number(re) + ", " + result);
+    if(re != 0)
+    {
+        xzconfig.Log(LOG_ERROR, xzssh.xzssh_getErrMsg());
+    }
+
+    result.clear();
+    xzconfig.Log(LOG_INFO, "xzssh.xzssh_exec(\"netstat -ie | tee 2.unl\",result);");
+    re = xzssh.xzssh_exec("netstat -ie | tee 2.unl",&result);
+    xzconfig.Log(LOG_INFO, "re = " + QString::number(re) + ", " + result);
+    if(re != 0)
+    {
+        xzconfig.Log(LOG_ERROR, xzssh.xzssh_getErrMsg());
+    }
+
+    re = xzssh.xzssh_sftpGet("1.unl","1.txt");
+    re = xzssh.xzssh_sftpGet("2.unl","2.txt");
+
 }

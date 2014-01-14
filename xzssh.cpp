@@ -1,6 +1,7 @@
 #include "xzssh.h"
 #include "xzconfig.h"
-#include <QTimer>
+#include <QFile>
+#include <QDataStream>
 
 int XZSSh::waitsocket(int socket_fd, LIBSSH2_SESSION *session)
 {
@@ -37,6 +38,8 @@ XZSSh::XZSSh(QObject *)
 {
     //XZOUTPUT;
     this->m_socket = new QTcpSocket();
+    m_sftp_session = 0;
+    m_sftp_handle = 0;
 }
 
 int XZSSh::xzssh_connect(QString peerAddr, quint16 peerPort, QString username, QString password)
@@ -54,7 +57,7 @@ int XZSSh::xzssh_connect(QString peerAddr, quint16 peerPort, QString username, Q
         }
         else
         {
-            this->m_socket->disconnect();
+            this->m_socket->disconnectFromHost();
         }
     }
 
@@ -63,7 +66,7 @@ int XZSSh::xzssh_connect(QString peerAddr, quint16 peerPort, QString username, Q
     {
         this->m_iErrNo = -1;
         this->m_sErrMsg = "libssh2_init failed.";
-        this->m_socket->disconnect();
+        this->m_socket->disconnectFromHost();
         return -2;
     }
 
@@ -72,7 +75,7 @@ int XZSSh::xzssh_connect(QString peerAddr, quint16 peerPort, QString username, Q
     {
         this->m_iErrNo = -1;
         this->m_sErrMsg = m_socket->errorString();
-        this->m_socket->disconnect();
+        this->m_socket->disconnectFromHost();
         return -1;
     }
 
@@ -86,7 +89,7 @@ int XZSSh::xzssh_connect(QString peerAddr, quint16 peerPort, QString username, Q
             errmsg = 0;
         }
 
-        this->m_socket->disconnect();
+        this->m_socket->disconnectFromHost();
         return -2;
     }
 
@@ -99,7 +102,7 @@ int XZSSh::xzssh_connect(QString peerAddr, quint16 peerPort, QString username, Q
             errmsg = 0;
         }
 
-        this->m_socket->disconnect();
+        this->m_socket->disconnectFromHost();
         return -3;
     }
 
@@ -116,7 +119,7 @@ int XZSSh::xzssh_connect(QString peerAddr, quint16 peerPort, QString username, Q
             errmsg = 0;
         }
 
-        this->m_socket->disconnect();
+        this->m_socket->disconnectFromHost();
         return -4;
     }
 
@@ -125,7 +128,9 @@ int XZSSh::xzssh_connect(QString peerAddr, quint16 peerPort, QString username, Q
 
 int XZSSh::xzssh_disconnect()
 {
-    this->m_socket->disconnect();
+    libssh2_session_disconnect(m_session, "Normal Shutdown, Thank you for playing");
+    libssh2_session_free(m_session);
+    this->m_socket->disconnectFromHost();
     return 0;
 }
 
@@ -139,74 +144,119 @@ int XZSSh::xzssh_getErrNo()
     return this->m_iErrNo;
 }
 
-int XZSSh::xzssh_exec(QString commandline, QString &result)
+int XZSSh::xzssh_exec(QString commandline, QString *result)
 {
+    // for exit use
+    char* errmsg = NULL;
+    int errmsg_len = 0;
+
     LIBSSH2_CHANNEL *channel;
     int rc;
-    int exitcode;
-    int bytecount = 0;
-
 
     while( (channel = libssh2_channel_open_session(m_session)) == NULL &&
-
-           libssh2_session_last_error(m_session,NULL,NULL,0) ==
-
-           LIBSSH2_ERROR_EAGAIN )
+           libssh2_session_last_error(m_session,NULL,NULL,0) == LIBSSH2_ERROR_EAGAIN )
     {
         waitsocket(m_socket->socketDescriptor(), m_session);
     }
-    if( channel == NULL )
+    if( channel == 0 )
     {
-        fprintf(stderr,"Error\n");
-        exit( 1 );
+        libssh2_session_last_error(m_session, &errmsg, &errmsg_len, 0);
+        if (errmsg_len>0 && errmsg)
+        {
+            this->m_sErrMsg = errmsg;
+            errmsg = 0;
+        }
     }
-    while( (rc = libssh2_channel_exec(channel, commandline.toLocal8Bit().data())) ==
-
-           LIBSSH2_ERROR_EAGAIN )
+    while( (rc = libssh2_channel_exec(channel, commandline.toLocal8Bit().data()))
+          == LIBSSH2_ERROR_EAGAIN )
     {
         waitsocket(m_socket->socketDescriptor(), m_session);
     }
     if( rc != 0 )
     {
-        fprintf(stderr,"Error\n");
-        exit( 1 );
+        libssh2_session_last_error(m_session, &errmsg, &errmsg_len, 0);
+        if (errmsg_len>0 && errmsg)
+        {
+            this->m_sErrMsg = errmsg;
+            errmsg = 0;
+        }
     }
-    for( ;; )
+
+    char buffer[0x4000];
+    do
     {
-        /* loop until we block */
-        int rc;
-        do
-        {
-            char buffer[0x4000];
-            rc = libssh2_channel_read( channel, buffer, sizeof(buffer) );
+        rc = libssh2_channel_read( channel, buffer, sizeof(buffer) );
 
-            if( rc > 0 )
+        if( rc < 0 && rc != LIBSSH2_ERROR_EAGAIN )
+        {
+            libssh2_session_last_error(m_session, &errmsg, &errmsg_len, 0);
+            if (errmsg_len>0 && errmsg)
             {
-                int i;
-                bytecount += rc;
-                fprintf(stderr, "We read:\n");
-                for( i=0; i < rc; ++i )
-                    fputc( buffer[i], stderr);
-                fprintf(stderr, "\n");
+                this->m_sErrMsg = errmsg;
+                errmsg = 0;
             }
-            else {
-                if( rc != LIBSSH2_ERROR_EAGAIN )
-                    /* no need to output this for the EAGAIN case */
-                    fprintf(stderr, "libssh2_channel_read returned %d\n", rc);
-            }
+            return -1;
         }
-        while( rc > 0 );
-
-        /* this is due to blocking that would occur otherwise so we loop on
-           this condition */
-        if( rc == LIBSSH2_ERROR_EAGAIN )
-        {
-            waitsocket(m_socket->socketDescriptor(), m_session);
-        }
-        else
-            break;
     }
-    exitcode = 127;
+    while( rc < 0 );
+
+    qDebug()<<rc;
+    buffer[rc] = '\0';
+    if(result != 0)
+        *result = buffer;
 
     return 0;
 }
+
+XZSSh::~XZSSh()
+{
+    libssh2_session_disconnect(m_session, "Normal Shutdown!");
+    libssh2_session_free(m_session);
+    this->m_socket->disconnectFromHost();
+}
+
+int XZSSh::xzssh_sftpGet(QString RemoteAddr, QString LocalAddr)
+{
+    QFile file(LocalAddr);
+    QDataStream out(&file);
+
+    if(!file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    {
+        this->m_sErrMsg = "Cannot Open file:" + LocalAddr;
+        return -1;
+    }
+
+
+    m_sftp_session = libssh2_sftp_init(m_session);
+
+    if (!m_sftp_session)
+    {
+        this->m_sErrMsg = "Unable to init SFTP session";
+        return -1;
+    }
+
+    m_sftp_handle = libssh2_sftp_open(m_sftp_session, RemoteAddr.toLocal8Bit(), LIBSSH2_FXF_READ, 0);
+
+    if (!m_sftp_handle)
+    {
+        this->m_sErrMsg = "Unable to open file with SFTP";
+        return -1;
+    }
+
+
+    char mem[1024];
+    int rc = 0;
+    while((rc = libssh2_sftp_read(m_sftp_handle, mem, sizeof(mem)))>0)
+    {
+        if(out.writeRawData(mem,rc) != rc)
+        {
+            this->m_sErrMsg = "write not enough";
+            return -1;
+        }
+    }
+
+    file.close();
+
+    return 0;
+}
+
