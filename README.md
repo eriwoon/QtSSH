@@ -4,4 +4,4 @@ This program is for the people who need monitor some servers at the same time, a
 
 This program will create a workflow who includes a chain of Executables and will execute one by one, and using SSH(or SFTP) to send commands to remote servers.
 
-So I think it will help
+So I wish it will help
