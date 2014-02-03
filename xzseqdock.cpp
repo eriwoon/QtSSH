@@ -205,7 +205,7 @@ void XZSeqDock::onClickTest()
     }*/
 
     xzconfig.Log(LOG_INFO, "xzssh.xzssh_connect(\"146.185.182.192\",22,\"xiaozhen\",\"****\");");
-    re = xzssh.xzssh_connect("146.185.182.192",22,"xiaozhen","Zxc12Axxici");
+    re = xzssh.xzssh_connect("146.185.182.192",22,"xiaozhen","****");
     xzconfig.Log(LOG_INFO, "re = " + QString::number(re));
     if(re != 0)
     {
