@@ -8,7 +8,7 @@
 #include <QString>
 #include <QHostAddress>
 
-class XZSSh : QObject
+class XZSSh : public QObject
 {
     Q_OBJECT
 public:

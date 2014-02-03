@@ -3,7 +3,7 @@
 #include <QFile>
 #include <QDataStream>
 
-int XZSSh::waitsocket(int socket_fd, LIBSSH2_SESSION *session)
+/*int XZSSh::waitsocket(int socket_fd, LIBSSH2_SESSION *session)
 {
     struct timeval timeout;
     int rc;
@@ -19,7 +19,7 @@ int XZSSh::waitsocket(int socket_fd, LIBSSH2_SESSION *session)
 
     FD_SET(socket_fd, &fd);
 
-    /* now make sure we wait in the correct direction */
+    // now make sure we wait in the correct direction
     dir = libssh2_session_block_directions(session);
 
 
@@ -32,7 +32,7 @@ int XZSSh::waitsocket(int socket_fd, LIBSSH2_SESSION *session)
     rc = select(socket_fd + 1, readfd, writefd, NULL, &timeout);
 
     return rc;
-}
+}*/
 
 XZSSh::XZSSh(QObject *)
 {
@@ -128,9 +128,15 @@ int XZSSh::xzssh_connect(QString peerAddr, quint16 peerPort, QString username, Q
 
 int XZSSh::xzssh_disconnect()
 {
-    libssh2_session_disconnect(m_session, "Normal Shutdown, Thank you for playing");
-    libssh2_session_free(m_session);
-    this->m_socket->disconnectFromHost();
+    if(m_session !=0 && m_socket != 0)
+    {
+        libssh2_session_disconnect(m_session, "Normal Shutdown, Thank you for playing");
+        libssh2_session_free(m_session);
+        this->m_socket->disconnectFromHost();
+
+        m_session = 0;
+        m_socket = 0;
+    }
     return 0;
 }
 
@@ -154,10 +160,10 @@ int XZSSh::xzssh_exec(QString commandline, QString *result)
     int rc;
 
     while( (channel = libssh2_channel_open_session(m_session)) == NULL &&
-           libssh2_session_last_error(m_session,NULL,NULL,0) == LIBSSH2_ERROR_EAGAIN )
-    {
+           libssh2_session_last_error(m_session,NULL,NULL,0) == LIBSSH2_ERROR_EAGAIN );
+    /*{
         waitsocket(m_socket->socketDescriptor(), m_session);
-    }
+    }*/
     if( channel == 0 )
     {
         libssh2_session_last_error(m_session, &errmsg, &errmsg_len, 0);
@@ -168,10 +174,10 @@ int XZSSh::xzssh_exec(QString commandline, QString *result)
         }
     }
     while( (rc = libssh2_channel_exec(channel, commandline.toLocal8Bit().data()))
-          == LIBSSH2_ERROR_EAGAIN )
-    {
+          == LIBSSH2_ERROR_EAGAIN );
+    /*{
         waitsocket(m_socket->socketDescriptor(), m_session);
-    }
+    }*/
     if( rc != 0 )
     {
         libssh2_session_last_error(m_session, &errmsg, &errmsg_len, 0);
@@ -210,9 +216,7 @@ int XZSSh::xzssh_exec(QString commandline, QString *result)
 
 XZSSh::~XZSSh()
 {
-    libssh2_session_disconnect(m_session, "Normal Shutdown!");
-    libssh2_session_free(m_session);
-    this->m_socket->disconnectFromHost();
+    this->xzssh_disconnect();
 }
 
 int XZSSh::xzssh_sftpGet(QString RemoteAddr, QString LocalAddr)

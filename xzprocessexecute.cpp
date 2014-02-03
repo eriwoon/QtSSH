@@ -11,9 +11,10 @@ XZProcessExecute::XZProcessExecute()
 XZProcessExecute::XZProcessExecute(void *mwindow)
 {
     XZOUTPUT
+    this->setTerminationEnabled(true);
     stop_flag = 0;
     xzconfig.Log(LOG_INFO,"Create instance of XZProcessExecute");
-    cssh = new XZSSh();
+    cssh = new XZSSh(this);
     this->lisExecute = 0;
     this->lisHostInfo = 0;
     connect(this,SIGNAL(ChangeStatus(QString)),(MainWindow*)mwindow,SLOT(setStatusBarTip(QString)));
@@ -24,6 +25,7 @@ void XZProcessExecute::onClickStop()
     xzconfig.Log(LOG_INFO,"You clicked STOP");
     emit this->ChangeStatus(QString("stopping..."));
     this->stop_flag = 1;
+    this->terminate();
 }
 
 //execute the xz_execute item
